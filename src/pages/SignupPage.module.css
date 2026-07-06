@@ -1,0 +1,14 @@
+.container {
+  margin-top: 80px;
+}
+
+.paper {
+  padding: 25px;
+}
+
+.title {
+  margin-top: -10px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  text-align: center;
+}
