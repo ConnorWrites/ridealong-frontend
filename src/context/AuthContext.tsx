@@ -6,50 +6,47 @@ import {
 } from "react";
 import type { ReactNode } from "react";
 import type { User } from "../types";
+import { me, logout as apiLogout } from "../api/rides";
 
 interface AuthContextType {
   user: User | null;
-  token: string | null;
-  setAuth: (user: User, token: string) => void;
-  logout: () => void;
+  loading: boolean;
+  setUser: (user: User | null) => void;
+  logout: () => Promise<void>;
   isDriver: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(() => {
-    const stored = localStorage.getItem("user");
-    return stored ? JSON.parse(stored) : null;
-  });
-  const [token, setToken] = useState<string | null>(() =>
-    localStorage.getItem("token")
-  );
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
+  // On mount, check if there's a valid session cookie
   useEffect(() => {
-    if (user && token) {
-      localStorage.setItem("user", JSON.stringify(user));
-      localStorage.setItem("token", token);
+    me()
+      .then(({ user }) => setUser(user))
+      .catch(() => setUser(null))
+      .finally(() => setLoading(false));
+  }, []);
+
+  async function logout() {
+    try {
+      await apiLogout();
+    } finally {
+      setUser(null);
     }
-  }, [user, token]);
-
-  function setAuth(user: User, token: string) {
-    setUser(user);
-    setToken(token);
-    localStorage.setItem("user", JSON.stringify(user));
-    localStorage.setItem("token", token);
-  }
-
-  function logout() {
-    setUser(null);
-    setToken(null);
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
   }
 
   return (
     <AuthContext.Provider
-      value={{ user, token, setAuth, logout, isDriver: user?.role === "DRIVER" }}
+      value={{
+        user,
+        loading,
+        setUser,
+        logout,
+        isDriver: user?.role === "DRIVER",
+      }}
     >
       {children}
     </AuthContext.Provider>

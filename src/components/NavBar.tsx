@@ -14,8 +14,8 @@ export default function NavBar() {
   const { user, logout, isDriver } = useAuth();
   const navigate = useNavigate();
 
-  function handleLogout() {
-    logout();
+  async function handleLogout() {
+    await logout();
     navigate("/login");
   }
 
@@ -31,27 +31,18 @@ export default function NavBar() {
         >
           RideAlong
         </Typography>
-
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <Button color="inherit" component={Link} to="/rides">
-            Browse Rides
-          </Button>
-          <Button color="inherit" component={Link} to="/dashboard">
-            Dashboard
-          </Button>
+          <Button color="inherit" component={Link} to="/rides">Browse Rides</Button>
+          <Button color="inherit" component={Link} to="/dashboard">Dashboard</Button>
           {isDriver && (
-            <Button color="inherit" component={Link} to="/post-ride">
-              Post a Ride
-            </Button>
+            <Button color="inherit" component={Link} to="/post-ride">Post a Ride</Button>
           )}
           <Chip
             label={user?.role}
             size="small"
             sx={{ bgcolor: "rgba(255,255,255,0.2)", color: "white", ml: 1 }}
           />
-          <Button color="inherit" onClick={handleLogout}>
-            Log out
-          </Button>
+          <Button color="inherit" onClick={handleLogout}>Log out</Button>
         </Box>
       </Toolbar>
     </AppBar>

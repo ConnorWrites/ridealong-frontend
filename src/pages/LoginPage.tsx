@@ -12,10 +12,9 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import { login } from "../api/rides";
 import { useAuth } from "../context/AuthContext";
-import styles from "./LoginPage.module.css";
 
 export default function LoginPage() {
-  const { setAuth } = useAuth();
+  const { setUser } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -27,8 +26,8 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
     try {
-      const { user, token } = await login(email, password);
-      setAuth(user, token);
+      const { user } = await login(email, password);
+      setUser(user);
       navigate("/rides");
     } catch (err: any) {
       setError(err.response?.data?.error || "Login failed");
@@ -39,9 +38,9 @@ export default function LoginPage() {
 
   return (
     <Container maxWidth="xs">
-      <Box className={styles.container}>
-        <Paper elevation={3} className={styles.paper}>
-          <Typography variant="h5" className={styles.title}>
+      <Box sx={{ mt: 10 }}>
+        <Paper elevation={3} sx={{ p: 4 }}>
+          <Typography variant="h5" sx={{ fontWeight: 700, mb: 3, textAlign: "center" }}>
             Log in to RideAlong
           </Typography>
           {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
@@ -62,21 +61,13 @@ export default function LoginPage() {
               required
               fullWidth
             />
-            <Button
-              type="submit"
-              variant="contained"
-              size="large"
-              disabled={loading}
-              fullWidth
-            >
+            <Button type="submit" variant="contained" size="large" disabled={loading} fullWidth>
               {loading ? "Logging in..." : "Log in"}
             </Button>
           </Box>
-          <Typography variant="h5" className={styles.title}>
+          <Typography sx={{ mt: 2, textAlign: "center" }} variant="body2">
             Don't have an account?{" "}
-            <MuiLink component={Link} to="/signup">
-              Sign up
-            </MuiLink>
+            <MuiLink component={Link} to="/signup">Sign up</MuiLink>
           </Typography>
         </Paper>
       </Box>

@@ -20,6 +20,15 @@ export async function login(
   return res.data;
 }
 
+export async function me(): Promise<{ user: import("../types").User }> {
+  const res = await api.get("/auth/me");
+  return res.data;
+}
+
+export async function logout(): Promise<void> {
+  await api.post("/auth/logout");
+}
+
 // Rides
 export async function listRides(filters?: {
   origin?: string;

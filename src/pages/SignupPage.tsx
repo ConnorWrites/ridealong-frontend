@@ -14,10 +14,9 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import { signup } from "../api/rides";
 import { useAuth } from "../context/AuthContext";
-import styles from "./SignupPage.module.css";
 
 export default function SignupPage() {
-  const { setAuth } = useAuth();
+  const { setUser } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -35,8 +34,8 @@ export default function SignupPage() {
     }
     setLoading(true);
     try {
-      const { user, token } = await signup(email, password, name, role);
-      setAuth(user, token);
+      const { user } = await signup(email, password, name, role);
+      setUser(user);
       navigate("/rides");
     } catch (err: any) {
       setError(err.response?.data?.error || "Signup failed");
@@ -48,8 +47,8 @@ export default function SignupPage() {
   return (
     <Container maxWidth="xs">
       <Box sx={{ mt: 10 }}>
-        <Paper elevation={3} className={styles.paper}>
-          <Typography variant="h5" className={styles.title}>
+        <Paper elevation={3} sx={{ p: 4 }}>
+          <Typography variant="h5" sx={{ fontWeight: 700, mb: 3, textAlign: "center" }}>
             Join RideAlong
           </Typography>
           {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
@@ -75,10 +74,10 @@ export default function SignupPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
               fullWidth
-              helperText="Must be at least 8 characters"
+              helperText="At least 8 characters"
             />
             <Box>
-              <Typography variant="h5" sx={{ fontWeight: 600, mb: 2, textAlign: "center" }}>
+              <Typography variant="body2" sx={{ mb: 1 }} color="text.secondary">
                 I want to...
               </Typography>
               <ToggleButtonGroup
@@ -91,21 +90,13 @@ export default function SignupPage() {
                 <ToggleButton value="DRIVER">Offer rides</ToggleButton>
               </ToggleButtonGroup>
             </Box>
-            <Button
-              type="submit"
-              variant="contained"
-              size="large"
-              disabled={loading}
-              fullWidth
-            >
+            <Button type="submit" variant="contained" size="large" disabled={loading} fullWidth>
               {loading ? "Creating account..." : "Create account"}
             </Button>
           </Box>
-          <Typography variant="h5" sx={{ fontWeight: 600, mb: 2, textAlign: "center" }}>
+          <Typography sx={{ mt: 2, textAlign: "center" }} variant="body2">
             Already have an account?{" "}
-            <MuiLink component={Link} to="/login">
-              Log in
-            </MuiLink>
+            <MuiLink component={Link} to="/login">Log in</MuiLink>
           </Typography>
         </Paper>
       </Box>
