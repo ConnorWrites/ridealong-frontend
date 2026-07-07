@@ -4,7 +4,7 @@ import {
   Button,
   Card,
   CardContent,
-  CardActions,
+  CardActionArea,
   Container,
   TextField,
   Typography,
@@ -18,20 +18,19 @@ import SearchIcon from "@mui/icons-material/Search";
 import PlaceIcon from "@mui/icons-material/Place";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import PersonIcon from "@mui/icons-material/Person";
-import { listRides, requestRide } from "../api/rides";
+import { useNavigate } from "react-router-dom";
+import { listRides } from "../api/rides";
 import { useAuth } from "../context/AuthContext";
 import type { Ride } from "../types";
-import styles from "./RidesPage.module.css";
 
 export default function RidesPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [rides, setRides] = useState<Ride[]>([]);
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [requestingId, setRequestingId] = useState<string | null>(null);
-  const [successId, setSuccessId] = useState<string | null>(null);
 
   async function fetchRides() {
     setLoading(true);
@@ -50,45 +49,24 @@ export default function RidesPage() {
     fetchRides();
   }, []);
 
-  async function handleRequest(rideId: string) {
-    setRequestingId(rideId);
-    try {
-      await requestRide(rideId);
-      setSuccessId(rideId);
-      fetchRides();
-    } catch (err: any) {
-      setError(err.response?.data?.error || "Could not request ride");
-    } finally {
-      setRequestingId(null);
-    }
+  function isAccepted(ride: Ride) {
+    return ride.requests.some((r) => r.status === "ACCEPTED");
   }
 
   function hasRequested(ride: Ride) {
     return ride.requests.some((r) => r.userId === user?.id);
   }
 
-  function isAccepted(ride: Ride) {
-    return ride.requests.some((r) => r.status === "ACCEPTED");
-  }
-
   return (
-    <Container maxWidth="md" className={styles.container}>
-      <Typography
-        variant="h5"
-        sx={{ fontWeight: 600, mb: 1, textAlign: "center" }}
-      >
+    <Container maxWidth="md" sx={{ py: 4 }}>
+      <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
         Available Rides
       </Typography>
-
-      <Typography
-        variant="body1"
-        sx={{ mb: 3, textAlign: "center", color: "text.secondary" }}
-      >
-        Browse upcoming rides and request a seat.
+      <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+        Click a ride to see the route and request a seat.
       </Typography>
 
-      {/* Search filters */}
-      <Box className={styles.search}>
+      <Box sx={{ display: "flex", gap: 2, mb: 3, flexWrap: "wrap" }}>
         <TextField
           label="From"
           value={origin}
@@ -104,7 +82,6 @@ export default function RidesPage() {
             },
           }}
         />
-
         <TextField
           label="To"
           value={destination}
@@ -120,27 +97,19 @@ export default function RidesPage() {
             },
           }}
         />
-
         <Button variant="outlined" onClick={fetchRides}>
           Search
         </Button>
       </Box>
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
+      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
       {loading ? (
         <Box sx={{ display: "flex", justifyContent: "center", mt: 6 }}>
           <CircularProgress />
         </Box>
       ) : rides.length === 0 ? (
-        <Typography
-          variant="body1"
-          sx={{ textAlign: "center", color: "text.secondary" }}
-        >
+        <Typography color="text.secondary" sx={{ textAlign: "center", mt: 6 }}>
           No upcoming rides found.{" "}
           {user?.role === "DRIVER" && "Why not post one?"}
         </Typography>
@@ -152,100 +121,47 @@ export default function RidesPage() {
             const isOwn = ride.driverId === user?.id;
 
             return (
-              <Grid key={ride.id} size={{ xs: 12, sm: 6 }}>
+              <Grid size={{ xs: 12, sm: 6 }} key={ride.id}>
                 <Card
                   variant="outlined"
-                  sx={{
-                    height: "100%",
-                    display: "flex",
-                    flexDirection: "column",
-                  }}
+                  sx={{ height: "100%", display: "flex", flexDirection: "column" }}
                 >
-                  <CardContent sx={{ flexGrow: 1 }}>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <PlaceIcon fontSize="small" color="primary" />
-                      <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                        {ride.origin} → {ride.destination}
-                      </Typography>
-                    </Box>
-
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1,
-                        mt: 1,
-                      }}
-                    >
-                      <AccessTimeIcon fontSize="small" color="action" />
-                      <Typography
-                        variant="body2"
-                        sx={{ color: "text.secondary" }}
-                      >
-                        {new Date(ride.departureTime).toLocaleString()}
-                      </Typography>
-                    </Box>
-
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1,
-                        mt: 1,
-                      }}
-                    >
-                      <PersonIcon fontSize="small" color="action" />
-                      <Typography
-                        variant="body2"
-                        sx={{ color: "text.secondary" }}
-                      >
-                        {ride.driver.name || ride.driver.email}
-                      </Typography>
-                    </Box>
-
-                    {accepted && (
-                      <Chip
-                        label="Seat taken"
-                        color="warning"
-                        size="small"
-                        sx={{ mt: 1 }}
-                      />
-                    )}
-
-                    {successId === ride.id && (
-                      <Chip
-                        label="Requested!"
-                        color="success"
-                        size="small"
-                        sx={{ mt: 1 }}
-                      />
-                    )}
-                  </CardContent>
-
-                  <CardActions>
-                    {!isOwn && user?.role === "PASSENGER" && (
-                      <Button
-                        size="small"
-                        variant="contained"
-                        disabled={
-                          requested ||
-                          accepted ||
-                          requestingId === ride.id
-                        }
-                        onClick={() => handleRequest(ride.id)}
-                      >
-                        {requestingId === ride.id
-                          ? "Requesting..."
-                          : requested
-                          ? "Already requested"
-                          : "Request seat"}
-                      </Button>
-                    )}
-
-                    {isOwn && (
-                      <Chip label="Your ride" variant="outlined" size="small" />
-                    )}
-                  </CardActions>
+                  <CardActionArea
+                    onClick={() => navigate(`/rides/${ride.id}`)}
+                    sx={{ flexGrow: 1 }}
+                  >
+                    <CardContent>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+                        <PlaceIcon fontSize="small" color="primary" />
+                        <Typography sx={{ fontWeight: 600 }}>
+                          {ride.origin} → {ride.destination}
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+                        <AccessTimeIcon fontSize="small" color="action" />
+                        <Typography variant="body2" color="text.secondary">
+                          {new Date(ride.departureTime).toLocaleString()}
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                        <PersonIcon fontSize="small" color="action" />
+                        <Typography variant="body2" color="text.secondary">
+                          {ride.driver.name || ride.driver.email}
+                        </Typography>
+                      </Box>
+                      <Box sx={{ mt: 1, display: "flex", gap: 1, flexWrap: "wrap" }}>
+                        {accepted && (
+                          <Chip label="Seat taken" color="warning" size="small" />
+                        )}
+                        {requested && (
+                          <Chip label="Requested" color="info" size="small" />
+                        )}
+                        {isOwn && (
+                          <Chip label="Your ride" variant="outlined" size="small" />
+                        )}
+                      </Box>
+                    </CardContent>
+                  </CardActionArea>
                 </Card>
               </Grid>
             );

@@ -6,13 +6,13 @@ import NavBar from "./components/NavBar";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import RidesPage from "./pages/RidesPage";
+import RideDetailPage from "./pages/RideDetailPage";
 import PostRidePage from "./pages/PostRidePage";
 import DashboardPage from "./pages/DashboardPage";
 
 function AppRoutes() {
   const { user, loading } = useAuth();
 
-  // Show a centered spinner while /auth/me resolves on page load
   if (loading) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
@@ -33,6 +33,14 @@ function AppRoutes() {
             element={
               <ProtectedRoute>
                 <RidesPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/rides/:rideId"
+            element={
+              <ProtectedRoute>
+                <RideDetailPage />
               </ProtectedRoute>
             }
           />
