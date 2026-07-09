@@ -1,0 +1,99 @@
+.hero {
+  min-height: 100vh;
+  width: 100%;
+  background-image: url("/images/hlb3.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  position: relative;
+}
+
+/* behind content but above background */
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.15);
+  z-index: 0;
+}
+
+.content {
+  position: relative;
+  z-index: 1;
+  padding: 32px 0; /* replaces container padding-top/bottom */
+}
+
+.title {
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.subtitle {
+  margin-bottom: 24px;
+}
+
+.errorAlert {
+  margin-bottom: 16px;
+}
+
+.loadingWrap {
+  display: flex;
+  justify-content: center;
+  margin-top: 48px;
+}
+
+.emptyMessage {
+  text-align: center;
+  margin-top: 48px;
+}
+
+.paperSection {
+  margin-bottom: 24px;
+  padding: 24px;
+}
+
+.paperSectionSmall {
+  margin-bottom: 16px;
+  padding: 16px;
+}
+
+.rideTitle {
+  font-weight: 600;
+}
+
+.rideTime {
+  margin-bottom: 16px;
+}
+
+.divider {
+  margin-bottom: 16px;
+}
+
+.listItemRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 4px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.itemLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.itemActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.requestCardTopRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 8px;
+}

@@ -15,6 +15,7 @@ import {
 } from "@mui/material";
 import { listRides, listMyRides, acceptRequest, rejectRequest } from "../api/rides";
 import { useAuth } from "../context/AuthContext";
+import styles from "./DashboardPage.module.css";
 import type { Ride, RideRequest } from "../types";
 
 type RideWithRequests = Ride & { requests: RideRequest[] };
@@ -86,35 +87,37 @@ export default function DashboardPage() {
   );
 
   return (
-    <Container maxWidth="md" sx={{ py: 4 }}>
-      <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
+  <div className={styles.hero}>
+    <div className={styles.overlay} />
+    <div className={styles.content}>
+    <Container maxWidth="md" className={styles.container}>
+      <Typography variant="h4" className={styles.title}>
         Dashboard
       </Typography>
-      <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+      <Typography variant="body1" color="text.secondary" className={styles.subtitle}>
         {isDriver ? "Manage requests on your rides." : "Track your ride requests."}
       </Typography>
 
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-
+      {error && <Alert severity="error" className={styles.errorAlert}>{error}</Alert>}
       {loading ? (
-        <Box sx={{ display: "flex", justifyContent: "center", mt: 6 }}>
+        <Box className={styles.loadingWrap}>
           <CircularProgress />
         </Box>
       ) : isDriver ? (
         myRides.length === 0 ? (
-          <Typography color="text.secondary" sx={{ textAlign: "center", mt: 6 }}>
+          <Typography color="text.secondary" className={styles.emptyMessage}>
             You haven't posted any rides yet.
           </Typography>
         ) : (
           myRides.map((ride) => (
-            <Paper key={ride.id} variant="outlined" sx={{ mb: 3, p: 3 }}>
-              <Typography variant="h6" sx={{ fontWeight: 600 }}>
+            <Paper key={ride.id} variant="outlined" className={styles.paperSection}>
+              <Typography variant="h6" className={styles.rideTitle}>
                 {ride.origin} → {ride.destination}
               </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              <Typography variant="body2" color="text.secondary" className={styles.rideTime}>
                 {new Date(ride.departureTime).toLocaleString()}
               </Typography>
-              <Divider sx={{ mb: 2 }} />
+              <Divider className={styles.divider} />
               {ride.requests.length === 0 ? (
                 <Typography variant="body2" color="text.secondary">
                   No requests yet.
@@ -125,20 +128,14 @@ export default function DashboardPage() {
                     <ListItem
                       key={req.id}
                       disablePadding
-                      sx={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        py: 1,
-                        gap: 2,
-                        flexWrap: "wrap",
-                      }}
+                      className={styles.listItemRow}
                     >
                       <ListItemText
+                      className={styles.itemLeft}
                         primary={`Passenger: ${req.userId.slice(0, 8)}...`}
                         secondary={`Requested ${new Date(req.createdAt).toLocaleString()}`}
                       />
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <Box className={styles.itemActions}>
                         <Chip
                           label={req.status}
                           color={statusColor[req.status]}
@@ -176,16 +173,16 @@ export default function DashboardPage() {
         )
       ) : (
         myRequests.length === 0 ? (
-          <Typography color="text.secondary" sx={{ textAlign: "center", mt: 6 }}>
+          <Typography color="text.secondary" className={styles.emptyMessage}>
             You haven't requested any rides yet.
           </Typography>
         ) : (
           <List disablePadding>
             {myRequests.map(({ request, ride }) => (
-              <Paper key={request.id} variant="outlined" sx={{ mb: 2, p: 2 }}>
-                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 1 }}>
+              <Paper key={request.id} variant="outlined" className={styles.paperSectionSmall}>
+                <Box className={styles.requestCardTopRow}>
                   <Box>
-                    <Typography sx={{ fontWeight: 600 }}>
+                    <Typography className={styles.rideTitle}>
                       {ride.origin} → {ride.destination}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
@@ -207,5 +204,7 @@ export default function DashboardPage() {
         )
       )}
     </Container>
+    </div>
+  </div>
   );
 }

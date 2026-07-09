@@ -1,7 +1,7 @@
 .hero {
   min-width: 100vw;
   min-height: 100vh;
-  background-image: url("/images/halong1.jpeg");
+  background-image: url("/images/f6.jpg");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -17,6 +17,6 @@
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.1);
+  background: rgba(0, 0, 0, 0.45);
   z-index: 0;
 }

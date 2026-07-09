@@ -40,10 +40,10 @@ export default function PostRidePage() {
 
   return (
     <Container maxWidth="sm" sx={{ py: 4 }}>
-      <Typography variant="h4" fontWeight={700} mb={1}>
+      <Typography variant="h4" >
         Post a Ride
       </Typography>
-      <Typography variant="body1" color="text.secondary" mb={3}>
+      <Typography variant="body1" color="text.secondary" sx={{mb: 3}}>
         Fill in the details and passengers can request a seat.
       </Typography>
       <Paper elevation={2} sx={{ p: 4 }}>
@@ -76,8 +76,13 @@ export default function PostRidePage() {
             onChange={(e) => setDepartureTime(e.target.value)}
             required
             fullWidth
-            inputProps={{ min: minDateTime }}
-            InputLabelProps={{ shrink: true }}
+            slotProps={{ htmlInput: { 
+              min: minDateTime,
+             }, 
+            inputLabel: {
+               shrink: true, 
+            },
+           }}
           />
           <Button
             type="submit"

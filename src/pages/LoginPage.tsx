@@ -12,6 +12,7 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import { login } from "../api/rides";
 import { useAuth } from "../context/AuthContext";
+import styles from "./LoginPage.module.css";
 
 export default function LoginPage() {
   const { setUser } = useAuth();
@@ -37,14 +38,14 @@ export default function LoginPage() {
   }
 
   return (
-    <Container maxWidth="xs">
-      <Box sx={{ mt: 10 }}>
-        <Paper elevation={3} sx={{ p: 4 }}>
-          <Typography variant="h5" sx={{ fontWeight: 700, mb: 3, textAlign: "center" }}>
+    <Container maxWidth="sm" className={styles.container}>
+      <Box className={styles.hero}>
+        <Paper elevation={3} className={styles.paper}>
+          <Typography variant="h5" className={styles.title}>
             Log in to RideAlong
           </Typography>
-          {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-          <Box component="form" onSubmit={handleSubmit} sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          {error && <Alert severity="error" className={styles.errorAlert}>{error}</Alert>}
+          <Box component="form" onSubmit={handleSubmit} className={styles.form}>
             <TextField
               label="Email"
               type="email"
@@ -65,7 +66,7 @@ export default function LoginPage() {
               {loading ? "Logging in..." : "Log in"}
             </Button>
           </Box>
-          <Typography sx={{ mt: 2, textAlign: "center" }} variant="body2">
+          <Typography variant="body2" className={styles.actionsText}>
             Don't have an account?{" "}
             <MuiLink component={Link} to="/signup">Sign up</MuiLink>
           </Typography>
