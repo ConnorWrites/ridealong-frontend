@@ -7,6 +7,10 @@ import {
   Typography,
   Alert,
   Paper,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { createRide } from "../api/rides";
@@ -16,6 +20,7 @@ export default function PostRidePage() {
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
   const [departureTime, setDepartureTime] = useState("");
+  const [availableSeats, setAvailableSeats] = useState(1);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -24,7 +29,7 @@ export default function PostRidePage() {
     setError("");
     setLoading(true);
     try {
-      await createRide({ origin, destination, departureTime });
+      await createRide({ origin, destination, departureTime, availableSeats });
       navigate("/dashboard");
     } catch (err: any) {
       setError(err.response?.data?.error || "Could not create ride");
@@ -84,6 +89,21 @@ export default function PostRidePage() {
             },
            }}
           />
+          <FormControl fullWidth>
+            <InputLabel id="available-seats-label">Available seats</InputLabel>
+            <Select
+              labelId="available-seats-label"
+              value={availableSeats}
+              onChange={(e) => setAvailableSeats(Number(e.target.value))}
+              required
+            >
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((seat) => (
+                <MenuItem key={seat} value={seat}>
+                  {seat}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
           <Button
             type="submit"
             variant="contained"

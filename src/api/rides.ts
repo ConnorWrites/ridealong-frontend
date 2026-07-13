@@ -52,6 +52,7 @@ export async function createRide(data: {
   origin: string;
   destination: string;
   departureTime: string;
+  availableSeats: number;
 }): Promise<Ride> {
   const res = await api.post("/rides", data);
   return res.data;
