@@ -13,6 +13,8 @@ export interface Ride {
   origin: string;
   destination: string;
   departureTime: string;
+  availableSeats: number;
+  bookedSeats: number;
   driverId: string;
   createdAt: string;
   driver: {
@@ -26,6 +28,7 @@ export interface Ride {
 export interface RideRequest {
   id: string;
   status: RequestStatus;
+  seatsRequested: number;
   createdAt: string;
   userId: string;
   rideId: string;

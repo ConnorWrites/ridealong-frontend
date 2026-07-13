@@ -59,8 +59,8 @@ export async function createRide(data: {
 }
 
 // Ride Requests
-export async function requestRide(rideId: string): Promise<RideRequest> {
-  const res = await api.post(`/rides/${rideId}/request`);
+export async function requestRide(rideId: string, seatsRequested: number): Promise<RideRequest> {
+  const res = await api.post(`/rides/${rideId}/request`, { seatsRequested });
   return res.data;
 }
 

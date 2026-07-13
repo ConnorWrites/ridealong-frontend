@@ -11,6 +11,10 @@ import {
   Divider,
   Paper,
   Stack,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import PlaceIcon from "@mui/icons-material/Place";
@@ -41,6 +45,7 @@ export default function RideDetailPage() {
   const [requesting, setRequesting] = useState(false);
   const [requestError, setRequestError] = useState("");
   const [requested, setRequested] = useState(false);
+  const [seatsRequested, setSeatsRequested] = useState(1);
 
   useEffect(() => {
     if (!rideId) return;
@@ -76,7 +81,7 @@ export default function RideDetailPage() {
     setRequesting(true);
     setRequestError("");
     try {
-      await requestRide(rideId);
+      await requestRide(rideId, seatsRequested);
       setRequested(true);
     } catch (err: any) {
       setRequestError(err.response?.data?.error || "Could not request ride");
@@ -85,7 +90,8 @@ export default function RideDetailPage() {
     }
   }
 
-  const isAccepted = ride?.requests.some((r) => r.status === "ACCEPTED");
+  const seatsRemaining = ride ? ride.availableSeats - ride.bookedSeats : 0;
+  const isFull = seatsRemaining <= 0;
   const isOwn = ride?.driverId === user?.id;
   const isPassenger = user?.role === "PASSENGER";
 
@@ -140,17 +146,42 @@ export default function RideDetailPage() {
             </Typography>
           </Box>
 
-          {isAccepted && (
-            <Chip label="Seat taken" color="warning" sx={{ alignSelf: "flex-start" }} />
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Typography variant="body1">
+              Seats available: {seatsRemaining} / {ride.availableSeats}
+            </Typography>
+          </Box>
+
+          {!isOwn && isPassenger && !requested && !isFull && (
+            <FormControl sx={{ width: 180 }}>
+              <InputLabel id="seats-requested-label">Seats</InputLabel>
+              <Select
+                labelId="seats-requested-label"
+                value={seatsRequested}
+                onChange={(e) => setSeatsRequested(Number(e.target.value))}
+              >
+                {Array.from({ length: seatsRemaining }, (_, i) => i + 1).map(
+                  (num) => (
+                    <MenuItem key={num} value={num}>
+                      {num}
+                    </MenuItem>
+                  )
+                )}
+              </Select>
+            </FormControl>
+          )}
+
+          {isFull && (
+            <Chip label="Ride full" color="warning" sx={{ alignSelf: "flex-start" }} />
           )}
 
           {requestError && <Alert severity="error">{requestError}</Alert>}
 
-          {!isOwn && isPassenger && (
+          {!isOwn && isPassenger && !isFull && (
             <Button
               variant="contained"
               size="large"
-              disabled={requested || !!isAccepted || requesting}
+              disabled={requested || !!isFull || requesting}
               onClick={handleRequest}
               sx={{ alignSelf: "flex-start" }}
             >
