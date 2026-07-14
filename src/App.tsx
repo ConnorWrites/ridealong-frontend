@@ -1,17 +1,46 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { Box, CircularProgress } from "@mui/material";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import NavBar from "./components/NavBar";
+import IdleWarningDialog from "./components/IdleWarningDialog";
+import { useIdleTimeout } from "./hooks/useIdleTimeout";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import RidesPage from "./pages/RidesPage";
 import RideDetailPage from "./pages/RideDetailPage";
 import PostRidePage from "./pages/PostRidePage";
 import DashboardPage from "./pages/DashboardPage";
+import { useState, useCallback } from "react";
+
+const WARNING_SECONDS = 60; // Show warning 1 minute before logout
 
 function AppRoutes() {
-  const { user, loading } = useAuth();
+  const { user, loading, logout } = useAuth();
+  const navigate = useNavigate();
+  const [warningOpen, setWarningOpen] = useState(false);
+
+  const handleWarn = useCallback(() => {
+    if (user) setWarningOpen(true);
+  }, [user]);
+
+  const handleLogout = useCallback(async () => {
+    setWarningOpen(false);
+    await logout();
+    navigate("/login");
+  }, [logout, navigate]);
+
+  const { resetTimers } = useIdleTimeout({
+    idleMinutes: 10,
+    warningMinutes: 1,
+    onWarn: handleWarn,
+    onLogout: handleLogout,
+  });
+
+function handleStayLoggedIn() {
+    setWarningOpen(false);
+    resetTimers();
+  }
 
   if (loading) {
     return (
@@ -66,6 +95,12 @@ function AppRoutes() {
           />
         </Routes>
       </Box>
+      <IdleWarningDialog
+        open={warningOpen}
+        onStayLoggedIn={handleStayLoggedIn}
+        onLogoutNow={handleLogout}
+        secondsRemaining={WARNING_SECONDS}
+      />
     </>
   );
 }
