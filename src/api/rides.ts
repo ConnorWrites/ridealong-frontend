@@ -58,6 +58,18 @@ export async function createRide(data: {
   return res.data;
 }
 
+export async function updateRide(
+  rideId: string,
+  data: { origin?: string; destination?: string; departureTime?: string; availableSeats?: number }
+): Promise<Ride> {
+  const res = await api.patch(`/rides/${rideId}`, data);
+  return res.data;
+}
+
+export async function deleteRide(rideId: string): Promise<void> {
+  await api.delete(`/rides/${rideId}`);
+}
+
 // Ride Requests
 export async function requestRide(rideId: string, seatsRequested: number): Promise<RideRequest> {
   const res = await api.post(`/rides/${rideId}/request`, { seatsRequested });
@@ -72,4 +84,8 @@ export async function acceptRequest(requestId: string) {
 export async function rejectRequest(requestId: string) {
   const res = await api.post(`/rides/requests/${requestId}/reject`);
   return res.data;
+}
+
+export async function cancelRequest(requestId: string): Promise<void> {
+  await api.delete(`/rides/requests/${requestId}`);
 }

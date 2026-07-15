@@ -12,8 +12,13 @@ import {
   ListItem,
   ListItemText,
   Paper,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
-import { listRides, listMyRides, acceptRequest, rejectRequest } from "../api/rides";
+import { TextField } from "@mui/material";
+import { listRides, listMyRides, acceptRequest, rejectRequest, cancelRequest, deleteRide, updateRide } from "../api/rides";
 import { useAuth } from "../context/AuthContext";
 import styles from "./DashboardPage.module.css";
 import type { Ride, RideRequest } from "../types";
@@ -33,6 +38,18 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [actionId, setActionId] = useState<string | null>(null);
+
+ // Edit dialog state
+  const [editRide, setEditRide] = useState<RideWithRequests | null>(null);
+  const [editOrigin, setEditOrigin] = useState("");
+  const [editDestination, setEditDestination] = useState("");
+  const [editTime, setEditTime] = useState("");
+  const [editLoading, setEditLoading] = useState(false);
+  const [editError, setEditError] = useState("");
+
+  // Delete confirm dialog
+  const [deleteRideId, setDeleteRideId] = useState<string | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   async function fetchData() {
     setLoading(true);
@@ -80,131 +97,312 @@ export default function DashboardPage() {
     }
   }
 
+  async function handleCancel(requestId: string) {
+    setActionId(requestId);
+    try {
+      await cancelRequest(requestId);
+      fetchData();
+    } catch (err: any) {
+      setError(err.response?.data?.error || "Could not cancel request");
+    } finally {
+      setActionId(null);
+    }
+  }
+
+async function handleDelete() {
+    if (!deleteRideId) return;
+    setDeleteLoading(true);
+    try {
+      await deleteRide(deleteRideId);
+      setDeleteRideId(null);
+      fetchData();
+    } catch (err: any) {
+      setError(err.response?.data?.error || "Could not delete ride");
+    } finally {
+      setDeleteLoading(false);
+    }
+  }
+
+  function openEdit(ride: RideWithRequests) {
+    setEditRide(ride);
+    setEditOrigin(ride.origin);
+    setEditDestination(ride.destination);
+    setEditTime(new Date(ride.departureTime).toISOString().slice(0, 16));
+    setEditError("");
+  }
+
+  async function handleEdit() {
+    if (!editRide) return;
+    setEditLoading(true);
+    setEditError("");
+    try {
+      await updateRide(editRide.id, {
+        origin: editOrigin,
+        destination: editDestination,
+        departureTime: editTime,
+      });
+      setEditRide(null);
+      fetchData();
+    } catch (err: any) {
+      setEditError(err.response?.data?.error || "Could not update ride");
+    } finally {
+      setEditLoading(false);
+    }
+  }
+
   const myRequests = allRides.flatMap((ride) =>
     ride.requests
       .filter((r) => r.userId === user?.id)
       .map((r) => ({ request: r, ride }))
   );
 
+const minDateTime = new Date(Date.now() + 5 * 60 * 1000)
+    .toISOString()
+    .slice(0, 16);
+
   return (
   <div className={styles.hero}>
     <div className={styles.overlay} />
     <div className={styles.content}>
-    <Container maxWidth="md" className={styles.container}>
-      <Typography variant="h4" className={styles.title}>
-        Dashboard
-      </Typography>
-      <Typography variant="body1" color="text.secondary" className={styles.subtitle}>
-        {isDriver ? "Manage requests on your rides." : "Track your ride requests."}
-      </Typography>
+      <Container maxWidth="md" className={styles.container}>
+        <Typography variant="h4" className={styles.title}>
+          Dashboard
+        </Typography>
+        <Typography variant="body1" color="text.secondary" className={styles.subtitle}>
+          {isDriver ? "Manage requests on your rides." : "Track your ride requests."}
+        </Typography>
 
-      {error && <Alert severity="error" className={styles.errorAlert}>{error}</Alert>}
-      {loading ? (
-        <Box className={styles.loadingWrap}>
-          <CircularProgress />
-        </Box>
-      ) : isDriver ? (
-        myRides.length === 0 ? (
-          <Typography color="text.secondary" className={styles.emptyMessage}>
-            You haven't posted any rides yet.
-          </Typography>
-        ) : (
-          myRides.map((ride) => (
-            <Paper key={ride.id} variant="outlined" className={styles.paperSection}>
-              <Typography variant="h6" className={styles.rideTitle}>
-                {ride.origin} → {ride.destination}
-              </Typography>
-              <Typography variant="body2" color="text.secondary" className={styles.rideTime}>
-                {new Date(ride.departureTime).toLocaleString()}
-              </Typography>
-              <Divider className={styles.divider} />
-              {ride.requests.length === 0 ? (
-                <Typography variant="body2" color="text.secondary">
-                  No requests yet.
+        {error && (
+          <Alert severity="error" className={styles.errorAlert}>
+            {error}
+          </Alert>
+        )}
+
+        {loading ? (
+          <Box className={styles.loadingWrap}>
+            <CircularProgress />
+          </Box>
+        ) : isDriver ? (
+          myRides.length === 0 ? (
+            <Typography color="text.secondary" className={styles.emptyMessage}>
+              You haven't posted any rides yet.
+            </Typography>
+          ) : (
+            myRides.map((ride) => (
+              <Paper key={ride.id} variant="outlined" className={styles.paperSection}>
+                <Typography variant="h6" className={styles.rideTitle}>
+                  {ride.origin} → {ride.destination}
                 </Typography>
-              ) : (
-                <List disablePadding>
-                  {ride.requests.map((req) => (
-                    <ListItem
-                      key={req.id}
-                      disablePadding
-                      className={styles.listItemRow}
-                    >
-                      <ListItemText
-                      className={styles.itemLeft}
-                        primary={`Passenger: ${req.userId.slice(0, 8)}...`}
-                        secondary={`Requested ${new Date(req.createdAt).toLocaleString()}`}
-                      />
-                      <Box className={styles.itemActions}>
-                        <Chip
-                          label={req.status}
-                          color={statusColor[req.status]}
-                          size="small"
+
+                <Typography variant="body2" color="text.secondary" className={styles.rideTime}>
+                  {new Date(ride.departureTime).toLocaleString()}
+                </Typography>
+
+                <Divider className={styles.divider} />
+
+                {ride.requests.length === 0 ? (
+                  <Typography variant="body2" color="text.secondary">
+                    No requests yet.
+                  </Typography>
+                ) : (
+                  <List disablePadding>
+                    {ride.requests.map((req) => (
+                      <ListItem
+                        key={req.id}
+                        disablePadding
+                        className={styles.listItemRow}
+                      >
+                        <ListItemText
+                          className={styles.itemLeft}
+                          primary={`Passenger: ${req.userId.slice(0, 8)}...`}
+                          secondary={`Requested ${new Date(req.createdAt).toLocaleString()}`}
                         />
-                        {req.status === "PENDING" && (
-                          <>
-                            <Button
-                              size="small"
-                              variant="contained"
-                              color="success"
-                              disabled={actionId === req.id}
-                              onClick={() => handleAccept(req.id)}
-                            >
-                              Accept
-                            </Button>
-                            <Button
-                              size="small"
-                              variant="outlined"
-                              color="error"
-                              disabled={actionId === req.id}
-                              onClick={() => handleReject(req.id)}
-                            >
-                              Reject
-                            </Button>
-                          </>
-                        )}
-                      </Box>
-                    </ListItem>
-                  ))}
-                </List>
-              )}
-            </Paper>
-          ))
-        )
-      ) : (
-        myRequests.length === 0 ? (
-          <Typography color="text.secondary" className={styles.emptyMessage}>
-            You haven't requested any rides yet.
-          </Typography>
-        ) : (
-          <List disablePadding>
-            {myRequests.map(({ request, ride }) => (
-              <Paper key={request.id} variant="outlined" className={styles.paperSectionSmall}>
-                <Box className={styles.requestCardTopRow}>
-                  <Box>
-                    <Typography className={styles.rideTitle}>
-                      {ride.origin} → {ride.destination}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {new Date(ride.departureTime).toLocaleString()}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Driver: {ride.driver.name || ride.driver.email}
-                    </Typography>
-                  </Box>
-                  <Chip
-                    label={request.status}
-                    color={statusColor[request.status]}
+
+                        <Box className={styles.itemActions}>
+                          <Chip
+                            label={req.status}
+                            color={statusColor[req.status]}
+                            size="small"
+                          />
+
+                          {req.status === "PENDING" && (
+                            <>
+                              <Button
+                                size="small"
+                                variant="contained"
+                                color="success"
+                                disabled={actionId === req.id}
+                                onClick={() => handleAccept(req.id)}
+                              >
+                                Accept
+                              </Button>
+                              <Button
+                                size="small"
+                                variant="outlined"
+                                color="error"
+                                disabled={actionId === req.id}
+                                onClick={() => handleReject(req.id)}
+                              >
+                                Reject
+                              </Button>
+                            </>
+                          )}
+                        </Box>
+                      </ListItem>
+                    ))}
+                  </List>
+                )}
+
+                {/* Driver actions */}
+                <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1, mt: 2 }}>
+                  <Button size="small" variant="outlined" onClick={() => openEdit(ride)}>
+                    Edit
+                  </Button>
+                  <Button
                     size="small"
-                  />
+                    variant="outlined"
+                    color="error"
+                    onClick={() => setDeleteRideId(ride.id)}
+                  >
+                    Delete
+                  </Button>
                 </Box>
               </Paper>
-            ))}
-          </List>
-        )
-      )}
-    </Container>
+            ))
+          )
+        ) : (
+          myRequests.length === 0 ? (
+            <Typography color="text.secondary" className={styles.emptyMessage}>
+              You haven't requested any rides yet.
+            </Typography>
+          ) : (
+            <List disablePadding>
+              {myRequests.map(({ request, ride }) => (
+                <Paper
+                  key={request.id}
+                  variant="outlined"
+                  className={styles.paperSectionSmall}
+                >
+                  <Box className={styles.requestCardTopRow}>
+                    <Box>
+                      <Typography className={styles.rideTitle}>
+                        {ride.origin} → {ride.destination}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {new Date(ride.departureTime).toLocaleString()}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Driver: {ride.driver.name || ride.driver.email}
+                      </Typography>
+                    </Box>
+
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <Chip
+                        label={request.status}
+                        color={statusColor[request.status]}
+                        size="small"
+                      />
+                      {request.status === "PENDING" && (
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          color="error"
+                          disabled={actionId === request.id}
+                          onClick={() => handleCancel(request.id)}
+                        >
+                          Cancel
+                        </Button>
+                      )}
+                    </Box>
+                  </Box>
+                </Paper>
+              ))}
+            </List>
+          )
+        )}
+
+        {/* Edit Ride Dialog */}
+        <Dialog
+          open={!!editRide}
+          onClose={() => setEditRide(null)}
+          maxWidth="xs"
+          fullWidth
+        >
+          <DialogTitle>Edit Ride</DialogTitle>
+
+          <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 2 }}>
+            {editError && (
+              <Alert severity="error">
+                {editError}
+              </Alert>
+            )}
+
+            <TextField
+              label="From"
+              value={editOrigin}
+              onChange={(e) => setEditOrigin(e.target.value)}
+              fullWidth
+            />
+
+            <TextField
+              label="To"
+              value={editDestination}
+              onChange={(e) => setEditDestination(e.target.value)}
+              fullWidth
+            />
+
+            <TextField
+                label="Departure time"
+                type="datetime-local"
+                value={editTime}
+                onChange={(e) => setEditTime(e.target.value)}
+                fullWidth
+                slotProps={{
+                inputLabel: { shrink: true },
+                              input: {
+                              inputProps: { min: minDateTime },
+                              },
+                            }}
+            />
+          </DialogContent>
+
+          <DialogActions sx={{ px: 3, pb: 2 }}>
+            <Button onClick={() => setEditRide(null)}>Cancel</Button>
+            <Button variant="contained" disabled={editLoading} onClick={handleEdit}>
+              {editLoading ? "Saving..." : "Save changes"}
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Delete Confirm Dialog */}
+        <Dialog
+          open={!!deleteRideId}
+          onClose={() => setDeleteRideId(null)}
+          maxWidth="xs"
+          fullWidth
+        >
+          <DialogTitle>Delete ride?</DialogTitle>
+
+          <DialogContent>
+            <Typography>
+              This will permanently delete the ride and all associated requests. This cannot be undone.
+            </Typography>
+          </DialogContent>
+
+          <DialogActions sx={{ px: 3, pb: 2 }}>
+            <Button onClick={() => setDeleteRideId(null)}>Keep ride</Button>
+            <Button
+              variant="contained"
+              color="error"
+              disabled={deleteLoading}
+              onClick={handleDelete}
+            >
+              {deleteLoading ? "Deleting..." : "Delete ride"}
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Container>
     </div>
   </div>
-  );
+);
 }
