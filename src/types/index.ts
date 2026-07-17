@@ -29,6 +29,8 @@ export interface RideRequest {
   id: string;
   status: RequestStatus;
   seatsRequested: number;
+  hasLuggage: boolean;
+  notes: string | null;
   createdAt: string;
   userId: string;
   rideId: string;

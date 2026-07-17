@@ -71,8 +71,8 @@ export async function deleteRide(rideId: string): Promise<void> {
 }
 
 // Ride Requests
-export async function requestRide(rideId: string, seatsRequested: number): Promise<RideRequest> {
-  const res = await api.post(`/rides/${rideId}/request`, { seatsRequested });
+export async function requestRide(rideId: string, seatsRequested: number, hasLuggage?: boolean, notes?: string): Promise<RideRequest> {
+  const res = await api.post(`/rides/${rideId}/request`, { seatsRequested, hasLuggage, notes });
   return res.data;
 }
 

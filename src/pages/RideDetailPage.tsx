@@ -15,12 +15,15 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  Checkbox,
+  FormControlLabel,
+  TextField
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import PlaceIcon from "@mui/icons-material/Place";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import PersonIcon from "@mui/icons-material/Person";
-import { getRide, requestRide } from "../api/rides";
+import { getRide, requestRide, acceptRequest, rejectRequest } from "../api/rides";
 import { geocode, getRoute } from "../api/maps";
 import { useAuth } from "../context/AuthContext";
 import RouteMap from "../components/RouteMap";
@@ -49,6 +52,11 @@ export default function RideDetailPage() {
   const [seatsRequested, setSeatsRequested] = useState(1);
 
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
+
+  const [hasLuggage, setHasLuggage] = useState(false);
+  const [notes, setNotes] = useState("");
+  const [actionError, setActionError] = useState("");
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   useEffect(() => {
     if (!rideId) return;
@@ -84,7 +92,7 @@ export default function RideDetailPage() {
     setRequesting(true);
     setRequestError("");
     try {
-      await requestRide(rideId, seatsRequested);
+      await requestRide(rideId, seatsRequested, hasLuggage, notes);
       setRequested(true);
     } catch (err: any) {
       setRequestError(err.response?.data?.error || "Could not request ride");
@@ -92,6 +100,32 @@ export default function RideDetailPage() {
       setRequesting(false);
     }
   }
+
+  async function handleAccept(requestId: string) {
+    setActionLoading(requestId);
+    setActionError("");
+    try {
+    await acceptRequest(requestId);
+    setRide(await getRide(rideId!));
+  } catch (err: any) {
+    setActionError(err.response?.data?.error || "Could not accept request");
+  } finally {
+    setActionLoading(null);
+  }
+}
+
+async function handleReject(requestId: string) {
+  setActionLoading(requestId);
+  setActionError("");
+  try {
+    await rejectRequest(requestId);
+    setRide(await getRide(rideId!));
+  } catch (err: any) {
+    setActionError(err.response?.data?.error || "Could not reject request");
+  } finally {
+    setActionLoading(null);
+  }
+}
 
   const seatsRemaining = ride ? ride.availableSeats - ride.bookedSeats : 0;
   const isFull = seatsRemaining <= 0;
@@ -156,6 +190,7 @@ export default function RideDetailPage() {
           </Box>
 
           {!isOwn && isPassenger && !requested && !isFull && (
+            <>
             <FormControl sx={{ width: 180 }}>
               <InputLabel id="seats-requested-label">Seats</InputLabel>
               <Select
@@ -172,6 +207,20 @@ export default function RideDetailPage() {
                 )}
               </Select>
             </FormControl>
+            <FormControlLabel
+              control={<Checkbox checked={hasLuggage} onChange={(e) => setHasLuggage(e.target.checked)} /> }
+                  label="I have luggage"
+            />  
+            <TextField
+            label="Notes for driver (optional)"
+            placeholder="e.g. 2 suitcases, wheelchair access needed"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            multiline
+            minRows={2}
+            fullWidth
+            />
+            </>
           )}
 
           {isFull && (
@@ -198,6 +247,59 @@ export default function RideDetailPage() {
 
           {isOwn && (
   <>
+  {ride.requests.filter((r) => r.status === "PENDING").length > 0 && (
+  <Box sx={{ mt: 2, width: "100%" }}>
+    <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
+      Pending requests
+    </Typography>
+    {actionError && <Alert severity="error" sx={{ mb: 1 }}>{actionError}</Alert>}
+    <Stack spacing={1}>
+      {ride.requests
+        .filter((r) => r.status === "PENDING")
+        .map((r) => (
+          <Paper key={r.id} variant="outlined" sx={{ p: 1.5 }}>
+            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+              <Box>
+                <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                  {r.user?.name || r.user?.email}
+                </Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ display:"block" }}>
+                  {r.seatsRequested} seat{r.seatsRequested > 1 ? "s" : ""} · requested{" "}
+                  {new Date(r.createdAt).toLocaleDateString()}
+                </Typography>
+                {r.hasLuggage && (
+                  <Chip label="Has luggage" size="small" sx={{ mt: 0.5, mr: 0.5 }} />
+                )}
+                {r.notes && (
+                  <Typography variant="body2" sx={{ mt: 0.5, fontStyle: "italic" }}>
+                    "{r.notes}"
+                  </Typography>
+                )}
+              </Box>
+              <Box sx={{ display: "flex", gap: 1, flexShrink: 0 }}>
+                <Button
+                  size="small"
+                  variant="contained"
+                  disabled={actionLoading === r.id}
+                  onClick={() => handleAccept(r.id)}
+                >
+                  Accept
+                </Button>
+                <Button
+                  size="small"
+                  color="error"
+                  disabled={actionLoading === r.id}
+                  onClick={() => handleReject(r.id)}
+                >
+                  Reject
+                </Button>
+              </Box>
+            </Box>
+          </Paper>
+        ))}
+    </Stack>
+  </Box>
+)}
     <Chip label="Your ride" variant="outlined" sx={{ alignSelf: "flex-start" }} />
     {ride.requests.filter((r) => r.status === "ACCEPTED").length > 0 && (
       <Box sx={{ mt: 2, width: "100%" }}>
