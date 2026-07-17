@@ -2,7 +2,7 @@
 
 The frontend client for **RideAlong**, a full-stack ridesharing application. Handles the user interface, live map routing, and communication with the backend API.
 
-🔗 Backend repo: [ridealong-backend]()
+🔗 Backend repo: [ridealong-backend](https://github.com/ConnorWrites/ridealong-backend)
 
 ## Features
 
@@ -23,7 +23,7 @@ The frontend client for **RideAlong**, a full-stack ridesharing application. Han
 
 ### Prerequisites
 - Node.js (v18+ recommended)
-- The [backend]() running locally or a deployed backend URL
+- The [backend](https://github.com/ConnorWrites/ridealong-backend) running locally or a deployed backend URL
 
 ### Installation
 
