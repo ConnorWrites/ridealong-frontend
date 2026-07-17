@@ -32,9 +32,28 @@ export interface RideRequest {
   createdAt: string;
   userId: string;
   rideId: string;
+   user?: {
+    id: string;
+    name: string | null;
+    email: string;
+  };
 }
 
 export interface AuthResponse {
   token: string;
   user: User;
+}
+
+export interface Message {
+  id: string;
+  content: string;
+  read: boolean;
+  createdAt: string;
+  senderId: string;
+  rideRequestId: string;
+  sender: {
+    id: string;
+    name: string | null;
+    email: string;
+  };
 }

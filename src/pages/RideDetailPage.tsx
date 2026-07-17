@@ -26,6 +26,7 @@ import { useAuth } from "../context/AuthContext";
 import RouteMap from "../components/RouteMap";
 import type { Ride } from "../types";
 import type { Coordinates, RouteGeoJSON } from "../api/maps";
+import MessageThread from "../components/MessageThread";
 
 export default function RideDetailPage() {
   const { rideId } = useParams<{ rideId: string }>();
@@ -46,6 +47,8 @@ export default function RideDetailPage() {
   const [requestError, setRequestError] = useState("");
   const [requested, setRequested] = useState(false);
   const [seatsRequested, setSeatsRequested] = useState(1);
+
+  const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!rideId) return;
@@ -194,8 +197,61 @@ export default function RideDetailPage() {
           )}
 
           {isOwn && (
-            <Chip label="Your ride" variant="outlined" sx={{ alignSelf: "flex-start" }} />
-          )}
+  <>
+    <Chip label="Your ride" variant="outlined" sx={{ alignSelf: "flex-start" }} />
+    {ride.requests.filter((r) => r.status === "ACCEPTED").length > 0 && (
+      <Box sx={{ mt: 2, width: "100%" }}>
+        <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
+          Passengers
+        </Typography>
+        <Stack spacing={1}>
+          {ride.requests
+            .filter((r) => r.status === "ACCEPTED")
+            .map((r) => (
+              <Paper key={r.id} variant="outlined" sx={{ p: 1.5 }}>
+                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <Box>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                      {r.user?.name || r.user?.email}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {r.seatsRequested} seat{r.seatsRequested > 1 ? "s" : ""}
+                    </Typography>
+                  </Box>
+                  <Button
+                    size="small"
+                    onClick={() => setActiveThreadId(activeThreadId === r.id ? null : r.id)}
+                  >
+                    {activeThreadId === r.id ? "Hide" : "Message"}
+                  </Button>
+                </Box>
+                {activeThreadId === r.id && (
+                  <Box sx={{ mt: 1.5 }}>
+                    <MessageThread
+                      requestId={r.id}
+                      otherPartyName={r.user?.name || r.user?.email || "Passenger"}
+                    />
+                  </Box>
+                )}
+              </Paper>
+            ))}
+        </Stack>
+      </Box>
+    )}
+  </>
+)}
+{!isOwn && (() => {
+  const ownRequest = ride.requests.find((r) => r.userId === user?.id);
+  if (ownRequest?.status !== "ACCEPTED") return null;
+  return (
+    <Box sx={{ mt: 2, width: "100%" }}>
+      <MessageThread
+        requestId={ownRequest.id}
+        otherPartyName={ride.driver.name || ride.driver.email}
+      />
+    </Box>
+  );
+})()}
         </Stack>
       </Paper>
 
