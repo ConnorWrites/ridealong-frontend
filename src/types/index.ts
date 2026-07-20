@@ -1,5 +1,5 @@
 export type UserRole = "DRIVER" | "PASSENGER" | "ADMIN";
-export type RequestStatus = "PENDING" | "ACCEPTED" | "REJECTED";
+export type RequestStatus = "PENDING" | "ACCEPTED" | "REJECTED" | "CANCELLED";
 
 export interface User {
   id: string;

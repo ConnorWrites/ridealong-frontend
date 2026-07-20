@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Box,
   Button,
@@ -29,6 +30,7 @@ const statusColor: Record<string, "default" | "warning" | "success" | "error"> =
   PENDING: "warning",
   ACCEPTED: "success",
   REJECTED: "error",
+  CANCELLED: "default",
 };
 
 export default function DashboardPage() {
@@ -38,6 +40,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [actionId, setActionId] = useState<string | null>(null);
+  const navigate = useNavigate();
 
  // Edit dialog state
   const [editRide, setEditRide] = useState<RideWithRequests | null>(null);
@@ -189,7 +192,7 @@ const minDateTime = new Date(Date.now() + 5 * 60 * 1000)
             </Typography>
           ) : (
             myRides.map((ride) => (
-              <Paper key={ride.id} variant="outlined" className={styles.paperSection}>
+              <Paper key={ride.id} variant="outlined" className={styles.paperSection} sx={{ cursor: "pointer" }} onClick={() => navigate(`/rides/${ride.id}`)}>
                 <Typography variant="h6" className={styles.rideTitle}>
                   {ride.origin} → {ride.destination}
                 </Typography>
@@ -214,10 +217,20 @@ const minDateTime = new Date(Date.now() + 5 * 60 * 1000)
                       >
                         <ListItemText
                           className={styles.itemLeft}
-                          primary={`Passenger: ${req.userId.slice(0, 8)}...`}
-                          secondary={`Requested ${new Date(req.createdAt).toLocaleString()}`}
+                          primary={`Passenger: ${req.user?.name || req.user?.email || "Unknown passenger"}`}
+                          secondary={`Requested ${req.seatsRequested} seat${req.seatsRequested > 1 ? "s" : ""} on ${new Date(req.createdAt).toLocaleString()} ${req.hasLuggage ? "with some luggage." : "without luggage."}`}
+                          />
+                          <ListItemText className={styles.itemLeft}
+                          primary= {req.notes && (
+                            <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            sx={{ mt: 1}}
+                            ><strong>Notes:</strong> {req.notes}
+                            </Typography>
+                          )}
                         />
-
+                    
                         <Box className={styles.itemActions}>
                           <Chip
                             label={req.status}
@@ -232,7 +245,10 @@ const minDateTime = new Date(Date.now() + 5 * 60 * 1000)
                                 variant="contained"
                                 color="success"
                                 disabled={actionId === req.id}
-                                onClick={() => handleAccept(req.id)}
+                                onClick={(e) => {
+                           e.stopPropagation();
+                           handleAccept(req.id);
+                          }}
                               >
                                 Accept
                               </Button>
@@ -241,7 +257,10 @@ const minDateTime = new Date(Date.now() + 5 * 60 * 1000)
                                 variant="outlined"
                                 color="error"
                                 disabled={actionId === req.id}
-                                onClick={() => handleReject(req.id)}
+                                onClick={(e) => {
+                           e.stopPropagation();
+                           handleReject(req.id);
+                          }}
                               >
                                 Reject
                               </Button>
@@ -255,14 +274,20 @@ const minDateTime = new Date(Date.now() + 5 * 60 * 1000)
 
                 {/* Driver actions */}
                 <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1, mt: 2 }}>
-                  <Button size="small" variant="outlined" onClick={() => openEdit(ride)}>
+                  <Button size="small" variant="outlined" onClick={(e) => {
+                           e.stopPropagation();
+                           openEdit(ride);
+                          }}>
                     Edit
                   </Button>
                   <Button
                     size="small"
                     variant="outlined"
                     color="error"
-                    onClick={() => setDeleteRideId(ride.id)}
+                    onClick={(e) => {
+                           e.stopPropagation();
+                          setDeleteRideId(ride.id);
+                          }}
                   >
                     Delete
                   </Button>
@@ -282,6 +307,8 @@ const minDateTime = new Date(Date.now() + 5 * 60 * 1000)
                   key={request.id}
                   variant="outlined"
                   className={styles.paperSectionSmall}
+                  sx={{ cursor: "pointer" }}
+                  onClick={() => navigate(`/rides/${ride.id}`)}
                 >
                   <Box className={styles.requestCardTopRow}>
                     <Box>
@@ -302,15 +329,18 @@ const minDateTime = new Date(Date.now() + 5 * 60 * 1000)
                         color={statusColor[request.status]}
                         size="small"
                       />
-                      {request.status === "PENDING" && (
+                      {(request.status === "PENDING" || request.status === "ACCEPTED") && (
                         <Button
                           size="small"
                           variant="outlined"
                           color="error"
                           disabled={actionId === request.id}
-                          onClick={() => handleCancel(request.id)}
+                          onClick={(e) => {
+                           e.stopPropagation();
+                           handleCancel(request.id);
+                          }}
                         >
-                          Cancel
+                          Cancel Booking
                         </Button>
                       )}
                     </Box>

@@ -1,5 +1,4 @@
 //Browse Rides Page
-
 import { useEffect, useState } from "react";
 import {
   Box,
@@ -56,7 +55,10 @@ export default function RidesPage() {
   }
 
   function hasRequested(ride: Ride) {
-    return ride.requests.some((r) => r.userId === user?.id);
+    return ride.requests.some((r) => 
+      r.userId === user?.id &&
+      r.status !== "CANCELLED"
+  );
   }
 
   return (
@@ -156,9 +158,12 @@ export default function RidesPage() {
                             <Typography variant="body2" color="text.secondary">
                               {ride.driver.name || ride.driver.email}
                             </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              Seats available: {ride.availableSeats - ride.bookedSeats} / {ride.availableSeats}
+                            </Typography>
                           </Box>
                           <Box sx={{ mt: 1, display: "flex", gap: 1, flexWrap: "wrap" }}>
-                            {accepted && <Chip label="Seat taken" color="warning" size="small" />}
+                            {accepted && <Chip label={`${ride.bookedSeats}/${ride.availableSeats} seats booked`} color="warning" size="small" />}
                             {requested && <Chip label="Requested" color="info" size="small" />}
                             {isOwn && <Chip label="Your ride" variant="outlined" size="small" />}
                           </Box>
