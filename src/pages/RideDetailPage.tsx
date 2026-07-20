@@ -61,15 +61,10 @@ export default function RideDetailPage() {
   useEffect(() => {
     if (!rideId) return;
     setRideLoading(true);
-    getRide(rideId)
-      .then((data) => {
-        setRide(data);
-        const alreadyRequested = data.requests.some((r) => r.userId === user?.id);
-        setRequested(alreadyRequested);
-      })
+    loadRide()
       .catch(() => setRideError("Could not load ride"))
       .finally(() => setRideLoading(false));
-  }, [rideId]);
+  }, [rideId, user?.id]);
 
   useEffect(() => {
     if (!ride) return;
@@ -87,13 +82,22 @@ export default function RideDetailPage() {
       .finally(() => setMapLoading(false));
   }, [ride]);
 
+async function loadRide() {
+  if(!rideId) return;
+  const data = await getRide(rideId);
+  setRide(data);
+  setRequested(
+    data.requests.some((r) => r.userId === user?.id)
+  );
+}
+
   async function handleRequest() {
     if (!rideId) return;
     setRequesting(true);
     setRequestError("");
     try {
       await requestRide(rideId, seatsRequested, hasLuggage, notes);
-      setRequested(true);
+      await loadRide();
     } catch (err: any) {
       setRequestError(err.response?.data?.error || "Could not request ride");
     } finally {
@@ -106,7 +110,7 @@ export default function RideDetailPage() {
     setActionError("");
     try {
     await acceptRequest(requestId);
-    setRide(await getRide(rideId!));
+    await loadRide();
   } catch (err: any) {
     setActionError(err.response?.data?.error || "Could not accept request");
   } finally {
@@ -119,7 +123,7 @@ async function handleReject(requestId: string) {
   setActionError("");
   try {
     await rejectRequest(requestId);
-    setRide(await getRide(rideId!));
+    await loadRide();
   } catch (err: any) {
     setActionError(err.response?.data?.error || "Could not reject request");
   } finally {
@@ -237,11 +241,13 @@ async function handleReject(requestId: string) {
               onClick={handleRequest}
               sx={{ alignSelf: "flex-start" }}
             >
-              {requesting
-                ? "Requesting..."
-                : requested
-                ? "Request sent"
-                : "Request seat"}
+              {requesting ? (
+                <CircularProgress size={20} color="inherit" />
+              ) : requested ? (
+                 "Request submitted"
+              ) : (
+                 "Request seat"
+                )}
             </Button>
           )}
 
@@ -283,7 +289,11 @@ async function handleReject(requestId: string) {
                   disabled={actionLoading === r.id}
                   onClick={() => handleAccept(r.id)}
                 >
-                  Accept
+                  {actionLoading === r.id ? (
+                    <CircularProgress size={16} color="inherit" />
+                  ) : (
+                    "Accept"
+                  )}
                 </Button>
                 <Button
                   size="small"
@@ -291,7 +301,11 @@ async function handleReject(requestId: string) {
                   disabled={actionLoading === r.id}
                   onClick={() => handleReject(r.id)}
                 >
-                  Reject
+                  {actionLoading === r.id ? (
+                    <CircularProgress size={16} color="inherit" />
+                  ) : (
+                    "Reject"
+                  )}
                 </Button>
               </Box>
             </Box>
