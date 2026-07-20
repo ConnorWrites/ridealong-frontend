@@ -28,7 +28,7 @@ The frontend client for **RideAlong**, a full-stack ridesharing application. Han
 ### Installation
 
 ```bash
-git clone <your-frontend-repo-url>
+git clone [frontend](https://github.com/ConnorWrites/ridealong-frontend)
 cd ridealong-frontend
 
 npm install
