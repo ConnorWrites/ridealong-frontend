@@ -23,6 +23,8 @@ import { listRides, listMyRides, acceptRequest, rejectRequest, cancelRequest, de
 import { useAuth } from "../context/AuthContext";
 import styles from "./DashboardPage.module.css";
 import type { Ride, RideRequest } from "../types";
+import AppSnackbar from "../components/AppSnackbar";
+import type { AlertColor } from "@mui/material";
 
 type RideWithRequests = Ride & { requests: RideRequest[] };
 
@@ -41,6 +43,11 @@ export default function DashboardPage() {
   const [error, setError] = useState("");
   const [actionId, setActionId] = useState<string | null>(null);
   const navigate = useNavigate();
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success" as AlertColor,
+  });
 
  // Edit dialog state
   const [editRide, setEditRide] = useState<RideWithRequests | null>(null);
@@ -80,9 +87,12 @@ export default function DashboardPage() {
     setActionId(requestId);
     try {
       await acceptRequest(requestId);
-      fetchData();
+      await fetchData();
+      showSnackbar("Ride request accepted!")
     } catch (err: any) {
-      setError(err.response?.data?.error || "Could not accept request");
+      const message = err.response?.data?.error || "Could not accept the ride request.";
+      setError(message);
+      showSnackbar(message, "error");
     } finally {
       setActionId(null);
     }
@@ -92,9 +102,12 @@ export default function DashboardPage() {
     setActionId(requestId);
     try {
       await rejectRequest(requestId);
-      fetchData();
+      await fetchData();
+      showSnackbar("Ride request rejected.");
     } catch (err: any) {
-      setError(err.response?.data?.error || "Could not reject request");
+      const message = err.response?.data?.error || "Could not reject the ride request";
+      setError(message);
+      showSnackbar(message, "error");
     } finally {
       setActionId(null);
     }
@@ -104,9 +117,12 @@ export default function DashboardPage() {
     setActionId(requestId);
     try {
       await cancelRequest(requestId);
-      fetchData();
+      await fetchData();
+      showSnackbar("Booking cancelled successfully.");
     } catch (err: any) {
-      setError(err.response?.data?.error || "Could not cancel request");
+      const message = err.response?.data?.error || "Could not cancel the booking.";
+      setError(message);
+      showSnackbar(message, "error");
     } finally {
       setActionId(null);
     }
@@ -118,9 +134,12 @@ async function handleDelete() {
     try {
       await deleteRide(deleteRideId);
       setDeleteRideId(null);
-      fetchData();
+      await fetchData();
+      showSnackbar("Ride deleted successfully.");
     } catch (err: any) {
-      setError(err.response?.data?.error || "Could not delete ride");
+      const message = err.response?.data?.error || "Could not delete the ride.";
+      setError(message);
+      showSnackbar(message, "error");
     } finally {
       setDeleteLoading(false);
     }
@@ -145,12 +164,23 @@ async function handleDelete() {
         departureTime: editTime,
       });
       setEditRide(null);
-      fetchData();
+      showSnackbar("Ride updated successfully.");
+      await fetchData();
     } catch (err: any) {
-      setEditError(err.response?.data?.error || "Could not update ride");
+      const message = err.response?.data?.error || "Could not update the ride.";
+      setError(message);
+      showSnackbar(message, "error");
     } finally {
       setEditLoading(false);
     }
+  }
+
+  function showSnackbar(message: string, severity: AlertColor = "success") {
+    setSnackbar({
+      open: true,
+      message, 
+      severity,
+    });
   }
 
   const myRequests = allRides.flatMap((ride) =>
@@ -432,6 +462,17 @@ const minDateTime = new Date(Date.now() + 5 * 60 * 1000)
           </DialogActions>
         </Dialog>
       </Container>
+      <AppSnackbar
+      open={snackbar.open}
+      message={snackbar.message}
+      severity={snackbar.severity}
+      onClose={() =>
+        setSnackbar((prev) => ({
+          ...prev,
+          open: false,
+        }))
+      }
+      />
     </div>
   </div>
 );

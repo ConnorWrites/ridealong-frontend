@@ -10,11 +10,14 @@ import {
   Link as MuiLink,
   ToggleButton,
   ToggleButtonGroup,
+  CircularProgress,
 } from "@mui/material";
 import { Link, useNavigate } from "react-router-dom";
 import { signup } from "../api/rides";
 import { useAuth } from "../context/AuthContext";
 import styles from "./SignupPage.module.css";
+import AppSnackbar from "../components/AppSnackbar";
+import type { AlertColor } from "@mui/material";
 
 export default function SignupPage() {
   const { setUser } = useAuth();
@@ -25,12 +28,27 @@ export default function SignupPage() {
   const [role, setRole] = useState<"DRIVER" | "PASSENGER">("PASSENGER");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [snackbar, setSnackbar] = useState({
+            open: false,
+            message: "",
+            severity: "success" as AlertColor,
+          });
+
+  function showSnackbar(message: string, severity: AlertColor = "success") {
+              setSnackbar({
+                open: true,
+                message, 
+                severity,
+              });
+            }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     if (password.length < 8) {
-      setError("Password must be at least 8 characters");
+      const message = "Password must be at least 8 characters";
+      setError(message);
+      showSnackbar(message, "error");
       return;
     }
     setLoading(true);
@@ -39,7 +57,9 @@ export default function SignupPage() {
       setUser(user);
       navigate("/rides");
     } catch (err: any) {
-      setError(err.response?.data?.error || "Signup failed");
+      const message = err.response?.data?.error || "Signup failed.";
+      setError(message);
+      showSnackbar(message, "error");
     } finally {
       setLoading(false);
     }
@@ -92,7 +112,10 @@ export default function SignupPage() {
               </ToggleButtonGroup>
             </Box>
             <Button type="submit" variant="contained" size="large" disabled={loading} fullWidth>
-              {loading ? "Creating account..." : "Create account"}
+               {loading ? (<CircularProgress size={20} color="inherit" />
+                                       ) : (
+                                          "Create account"
+                                       )}
             </Button>
           </Box>
           <Typography  variant="body2" className={styles.actionsText}>
@@ -101,6 +124,17 @@ export default function SignupPage() {
           </Typography>
         </Paper>
       </Box>
+          <AppSnackbar
+                        open={snackbar.open}
+                        message={snackbar.message}
+                        severity={snackbar.severity}
+                        onClose={() =>
+                          setSnackbar((prev) => ({
+                            ...prev,
+                            open: false,
+                          }))
+                        }
+                        />
     </Container>
   );
 }

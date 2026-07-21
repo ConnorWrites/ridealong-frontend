@@ -11,9 +11,12 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  CircularProgress,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { createRide } from "../api/rides";
+import AppSnackbar from "../components/AppSnackbar";
+import type { AlertColor } from "@mui/material";
 
 export default function PostRidePage() {
   const navigate = useNavigate();
@@ -23,6 +26,19 @@ export default function PostRidePage() {
   const [availableSeats, setAvailableSeats] = useState(1);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [snackbar, setSnackbar] = useState({
+        open: false,
+        message: "",
+        severity: "success" as AlertColor,
+      });
+
+  function showSnackbar(message: string, severity: AlertColor = "success") {
+          setSnackbar({
+            open: true,
+            message, 
+            severity,
+          });
+        }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -32,7 +48,9 @@ export default function PostRidePage() {
       await createRide({ origin, destination, departureTime, availableSeats });
       navigate("/dashboard");
     } catch (err: any) {
-      setError(err.response?.data?.error || "Could not create ride");
+      const message = err.response?.data?.error || "Could not create the ride.";
+      setError(message);
+      showSnackbar(message, "error");
     } finally {
       setLoading(false);
     }
@@ -111,10 +129,24 @@ export default function PostRidePage() {
             disabled={loading}
             fullWidth
           >
-            {loading ? "Posting..." : "Post ride"}
+            {loading ? (<CircularProgress size={20} color="inherit" />
+            ) : (
+              "Post ride"
+            )}
           </Button>
         </Box>
       </Paper>
+      <AppSnackbar
+            open={snackbar.open}
+            message={snackbar.message}
+            severity={snackbar.severity}
+            onClose={() =>
+              setSnackbar((prev) => ({
+                ...prev,
+                open: false,
+              }))
+            }
+            />
     </Container>
   );
 }

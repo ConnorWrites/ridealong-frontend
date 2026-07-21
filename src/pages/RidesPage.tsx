@@ -25,6 +25,8 @@ import { listRides } from "../api/rides";
 import { useAuth } from "../context/AuthContext";
 import type { Ride } from "../types";
 import styles from "./RidesPage.module.css";
+import AppSnackbar from "../components/AppSnackbar";
+import type { AlertColor } from "@mui/material";
 
 export default function RidesPage() {
   const { user } = useAuth();
@@ -34,6 +36,19 @@ export default function RidesPage() {
   const [destination, setDestination] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [snackbar, setSnackbar] = useState({
+            open: false,
+            message: "",
+            severity: "success" as AlertColor,
+          });
+
+  function showSnackbar(message: string, severity: AlertColor = "success") {
+              setSnackbar({
+                open: true,
+                message, 
+                severity,
+              });
+            }
 
   async function fetchRides() {
     setLoading(true);
@@ -42,7 +57,9 @@ export default function RidesPage() {
       const data = await listRides({ origin, destination });
       setRides(data);
     } catch {
-      setError("Could not load rides");
+      const message = "Could not load rides.";
+      setError(message);
+      showSnackbar(message, "error");
     } finally {
       setLoading(false);
     }
@@ -105,7 +122,9 @@ export default function RidesPage() {
                   },
                 }}
               />
-              <Button variant="outlined" onClick={fetchRides}>Search</Button>
+              <Button variant="outlined" onClick={fetchRides} disabled={loading}>
+                { loading ? <CircularProgress size={18} /> : "Search" }
+                </Button>
             </Box>
           </Paper>
 
@@ -176,6 +195,17 @@ export default function RidesPage() {
             </Grid>
           )}
         </Container>
+         <AppSnackbar
+                                open={snackbar.open}
+                                message={snackbar.message}
+                                severity={snackbar.severity}
+                                onClose={() =>
+                                  setSnackbar((prev) => ({
+                                    ...prev,
+                                    open: false,
+                                  }))
+                                }
+                                />
       </div>
     </div>
   );

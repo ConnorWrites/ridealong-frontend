@@ -8,11 +8,14 @@ import {
   Alert,
   Paper,
   Link as MuiLink,
+  CircularProgress,
 } from "@mui/material";
 import { Link, useNavigate } from "react-router-dom";
 import { login } from "../api/rides";
 import { useAuth } from "../context/AuthContext";
 import styles from "./LoginPage.module.css";
+import AppSnackbar from "../components/AppSnackbar";
+import type { AlertColor } from "@mui/material";
 
 export default function LoginPage() {
   const { setUser } = useAuth();
@@ -21,6 +24,19 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [snackbar, setSnackbar] = useState({
+          open: false,
+          message: "",
+          severity: "success" as AlertColor,
+        });
+
+  function showSnackbar(message: string, severity: AlertColor = "success") {
+            setSnackbar({
+              open: true,
+              message, 
+              severity,
+            });
+          }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -31,7 +47,9 @@ export default function LoginPage() {
       setUser(user);
       navigate("/rides");
     } catch (err: any) {
-      setError(err.response?.data?.error || "Login failed");
+      const message = err.response?.data?.error || "Login failed.";
+      setError(message);
+      showSnackbar(message, "error");
     } finally {
       setLoading(false);
     }
@@ -63,7 +81,10 @@ export default function LoginPage() {
               fullWidth
             />
             <Button type="submit" variant="contained" size="large" disabled={loading} fullWidth>
-              {loading ? "Logging in..." : "Log in"}
+              {loading ? (<CircularProgress size={20} color="inherit" />
+                         ) : (
+                            "Log in"
+                         )}
             </Button>
           </Box>
           <Typography variant="body2" className={styles.actionsText}>
@@ -72,6 +93,17 @@ export default function LoginPage() {
           </Typography>
         </Paper>
       </Box>
+      <AppSnackbar
+                  open={snackbar.open}
+                  message={snackbar.message}
+                  severity={snackbar.severity}
+                  onClose={() =>
+                    setSnackbar((prev) => ({
+                      ...prev,
+                      open: false,
+                    }))
+                  }
+                  />
     </Container>
   );
 }

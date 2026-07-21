@@ -30,6 +30,8 @@ import RouteMap from "../components/RouteMap";
 import type { Ride } from "../types";
 import type { Coordinates, RouteGeoJSON } from "../api/maps";
 import MessageThread from "../components/MessageThread";
+import AppSnackbar from "../components/AppSnackbar";
+import type { AlertColor } from "@mui/material";
 
 export default function RideDetailPage() {
   const { rideId } = useParams<{ rideId: string }>();
@@ -58,6 +60,12 @@ export default function RideDetailPage() {
   const [actionError, setActionError] = useState("");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success" as AlertColor,
+  });
+
   useEffect(() => {
     if (!rideId) return;
     setRideLoading(true);
@@ -82,6 +90,14 @@ export default function RideDetailPage() {
       .finally(() => setMapLoading(false));
   }, [ride]);
 
+    function showSnackbar(message: string, severity: AlertColor = "success") {
+      setSnackbar({
+        open: true,
+        message, 
+        severity,
+      });
+    }
+
 async function loadRide() {
   if(!rideId) return;
   const data = await getRide(rideId);
@@ -98,8 +114,11 @@ async function loadRide() {
     try {
       await requestRide(rideId, seatsRequested, hasLuggage, notes);
       await loadRide();
+      showSnackbar("Ride request sent!")
     } catch (err: any) {
-      setRequestError(err.response?.data?.error || "Could not request ride");
+      const message = err.response?.data?.error || "Could not request the ride";
+      setRequestError(message);
+      showSnackbar(message, "error");
     } finally {
       setRequesting(false);
     }
@@ -111,9 +130,12 @@ async function loadRide() {
     try {
     await acceptRequest(requestId);
     await loadRide();
+    showSnackbar("Ride accepted!");
   } catch (err: any) {
-    setActionError(err.response?.data?.error || "Could not accept request");
-  } finally {
+      const message = err.response?.data?.error || "Could not accept the ride request";
+      setActionError(message);
+      showSnackbar(message, "error");
+    }  finally {
     setActionLoading(null);
   }
 }
@@ -124,9 +146,12 @@ async function handleReject(requestId: string) {
   try {
     await rejectRequest(requestId);
     await loadRide();
+    showSnackbar("Ride request rejected.")
   } catch (err: any) {
-    setActionError(err.response?.data?.error || "Could not reject request");
-  } finally {
+      const message = err.response?.data?.error || "Could not reject the ride request";
+      setActionError(message);
+      showSnackbar(message, "error");
+    } finally {
     setActionLoading(null);
   }
 }
@@ -385,6 +410,17 @@ async function handleReject(requestId: string) {
       ) : origin && destination && route ? (
         <RouteMap origin={origin} destination={destination} route={route} />
       ) : null}
+      <AppSnackbar
+          open={snackbar.open}
+          message={snackbar.message}
+          severity={snackbar.severity}
+          onClose={() =>
+            setSnackbar((prev) => ({
+              ...prev,
+              open: false,
+            }))
+          }
+          />
     </Container>
   );
 }
