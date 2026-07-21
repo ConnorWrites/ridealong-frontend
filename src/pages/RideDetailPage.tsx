@@ -189,7 +189,7 @@ async function handleReject(requestId: string) {
 
       <Paper variant="outlined" sx={{ p: 3, mb: 3 }}>
         <Stack spacing={2}>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1, cursor: "pointer" }} onClick={() => navigate("/dashboard")} >
             <PlaceIcon color="primary" />
             <Typography variant="h5" sx={{ fontWeight: 700 }}>
               {ride.origin} → {ride.destination}
@@ -221,10 +221,11 @@ async function handleReject(requestId: string) {
           {!isOwn && isPassenger && !requested && !isFull && (
             <>
             <FormControl sx={{ width: 180 }}>
-              <InputLabel id="seats-requested-label">Seats</InputLabel>
+              <InputLabel id="seats-requested-label" shrink>Seats</InputLabel>
               <Select
                 labelId="seats-requested-label"
                 value={seatsRequested}
+                label={"Seats"}
                 onChange={(e) => setSeatsRequested(Number(e.target.value))}
               >
                 {Array.from({ length: seatsRemaining }, (_, i) => i + 1).map(

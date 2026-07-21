@@ -112,6 +112,7 @@ export default function PostRidePage() {
             <Select
               labelId="available-seats-label"
               value={availableSeats}
+              label={"Available seats"}
               onChange={(e) => setAvailableSeats(Number(e.target.value))}
               required
             >

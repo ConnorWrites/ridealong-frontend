@@ -17,6 +17,10 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import { TextField } from "@mui/material";
 import { listRides, listMyRides, acceptRequest, rejectRequest, cancelRequest, deleteRide, updateRide } from "../api/rides";
@@ -54,6 +58,7 @@ export default function DashboardPage() {
   const [editOrigin, setEditOrigin] = useState("");
   const [editDestination, setEditDestination] = useState("");
   const [editTime, setEditTime] = useState("");
+  const [editAvailableSeats, setEditAvailableSeats] = useState<number>(0);
   const [editLoading, setEditLoading] = useState(false);
   const [editError, setEditError] = useState("");
 
@@ -150,6 +155,7 @@ async function handleDelete() {
     setEditOrigin(ride.origin);
     setEditDestination(ride.destination);
     setEditTime(new Date(ride.departureTime).toISOString().slice(0, 16));
+    setEditAvailableSeats(ride.availableSeats);
     setEditError("");
   }
 
@@ -162,6 +168,7 @@ async function handleDelete() {
         origin: editOrigin,
         destination: editDestination,
         departureTime: editTime,
+        availableSeats: editAvailableSeats,
       });
       setEditRide(null);
       showSnackbar("Ride updated successfully.");
@@ -424,6 +431,22 @@ const minDateTime = new Date(Date.now() + 5 * 60 * 1000)
                               },
                             }}
             />
+            <FormControl fullWidth sx={{ mt: 1 }}>
+  <InputLabel id="seats-edit-label" shrink>Seats available</InputLabel>
+
+  <Select
+    labelId="seats-edit-label"
+    label="Seats available"
+    value={editAvailableSeats}
+    onChange={(e) => setEditAvailableSeats(Number(e.target.value))}
+  >
+    {Array.from({ length: 10 }, (_, i) => i + 1).map((num) => (
+      <MenuItem key={num} value={num}>
+        {num}
+      </MenuItem>
+    ))}
+  </Select>
+</FormControl>
           </DialogContent>
 
           <DialogActions sx={{ px: 3, pb: 2 }}>
