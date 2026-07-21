@@ -189,7 +189,7 @@ async function handleReject(requestId: string) {
 
       <Paper variant="outlined" sx={{ p: 3, mb: 3 }}>
         <Stack spacing={2}>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1, cursor: "pointer" }} onClick={() => navigate("/dashboard")} >
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1, cursor: "pointer" }} onClick={() => navigate((ride.availableSeats)==(ride.bookedSeats) ? ("/rides") : ("/dashboard"))} >
             <PlaceIcon color="primary" />
             <Typography variant="h5" sx={{ fontWeight: 700 }}>
               {ride.origin} → {ride.destination}
