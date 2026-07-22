@@ -20,6 +20,7 @@ export async function geocode(place: string): Promise<Coordinates> {
 
 export interface RouteGeoJSON {
   type: "Feature";
+  properties: {};
   geometry: {
     type: "LineString";
     coordinates: number[][];
@@ -40,6 +41,7 @@ export async function getRoute(
 
   return {
     type: "Feature",
+    properties: {},
     geometry: data.routes[0].geometry,
   };
 }
