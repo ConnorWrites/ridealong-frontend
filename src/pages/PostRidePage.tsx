@@ -17,6 +17,7 @@ import { useNavigate } from "react-router-dom";
 import { createRide } from "../api/rides";
 import AppSnackbar from "../components/AppSnackbar";
 import type { AlertColor } from "@mui/material";
+import styles from "./PostRidePage.module.css";
 
 export default function PostRidePage() {
   const navigate = useNavigate();
@@ -62,6 +63,9 @@ export default function PostRidePage() {
     .slice(0, 16);
 
   return (
+    <div className={styles.hero}>
+      <div className={styles.overlay} />
+      <div className={styles.content}>
     <Container maxWidth="sm" sx={{ py: 4 }}>
       <Typography variant="h4" >
         Post a Ride
@@ -149,5 +153,7 @@ export default function PostRidePage() {
             }
             />
     </Container>
+    </div>
+    </div>
   );
 }

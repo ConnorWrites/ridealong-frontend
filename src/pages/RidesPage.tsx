@@ -1,4 +1,3 @@
-//Browse Rides Page
 import { useEffect, useState } from "react";
 import {
   Box,

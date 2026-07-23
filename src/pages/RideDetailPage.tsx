@@ -32,6 +32,7 @@ import type { Coordinates, RouteGeoJSON } from "../api/maps";
 import MessageThread from "../components/MessageThread";
 import AppSnackbar from "../components/AppSnackbar";
 import type { AlertColor } from "@mui/material";
+import styles from "./RideDetailPage.module.css";
 
 export default function RideDetailPage() {
   const { rideId } = useParams<{ rideId: string }>();
@@ -178,6 +179,9 @@ async function handleReject(requestId: string) {
   }
 
   return (
+    <div className={styles.hero}>
+      <div className={styles.overlay} />
+        <div className={styles.content}>
     <Container maxWidth="md" sx={{ py: 4 }}>
       <Button
         startIcon={<ArrowBackIcon />}
@@ -423,5 +427,7 @@ async function handleReject(requestId: string) {
           }
           />
     </Container>
+    </div>
+    </div>
   );
 }

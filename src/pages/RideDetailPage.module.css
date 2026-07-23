@@ -1,7 +1,7 @@
 .hero {
   min-width: 100vw;
   min-height: 100vh;
-  background-image: url("/images/e55aa73a-ec58-4848-af62-20672a483c4b.jpg");
+  background-image: url("/images/hlb3.jpeg");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -17,6 +17,6 @@
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.45);
   z-index: 0;
+  pointer-events: none;
 }
